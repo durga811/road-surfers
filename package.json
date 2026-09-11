@@ -1,0 +1,24 @@
+{
+  "name": "road-surfers",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Nocturne \u2014 a 3D endless runner through a twilight megacity transit line.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 4173",
+    "typecheck": "tsc --noEmit",
+    "validate": "esbuild src/dev/runValidation.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/validate.mjs --log-level=error && node node_modules/.cache/nocturne/validate.mjs",
+    "soak": "esbuild src/dev/runSoak.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/soak.mjs --log-level=error && node node_modules/.cache/nocturne/soak.mjs",
+    "test": "npm run typecheck && npm run validate && npm run soak"
+  },
+  "dependencies": {
+    "three": "^0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.180.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Nocturne — an endless maglev run through a twilight megacity." />
+    <meta name="theme-color" content="#070b18" />
+    <title>Nocturne — Endless Transit Run</title>
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="scene"></canvas>
+
+      <!-- Colour / vignette grade layer -->
+      <div class="grade" aria-hidden="true"></div>
+      <div class="flash" id="flash" aria-hidden="true"></div>
+
+      <!-- ── HUD ─────────────────────────────────────────── -->
+      <div class="hud" id="hud" aria-hidden="true">
+        <div class="hud__top">
+          <div class="stat stat--score">
+            <span class="stat__label">Score</span>
+            <span class="stat__value" id="hud-score">0</span>
+          </div>
+          <div class="stat stat--right">
+            <div class="chip chip--coin">
+              <svg viewBox="0 0 24 24" class="chip__icon" aria-hidden="true">
+                <path d="M12 2 22 12 12 22 2 12Z" />
+              </svg>
+              <span id="hud-coins">0</span>
+            </div>
+            <div class="chip chip--dist">
+              <span id="hud-distance">0</span><em>m</em>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud__speed">
+          <div class="speed__track"><div class="speed__fill" id="hud-speed"></div></div>
+          <span class="speed__label">Velocity</span>
+        </div>
+
+        <div class="powerups" id="hud-powerups"></div>
+        <div class="popups" id="hud-popups"></div>
+      </div>
+
+      <!-- ── Screens ─────────────────────────────────────── -->
+      <div class="screen screen--start is-visible" id="screen-start">
+        <div class="panel panel--title">
+          <div class="brand">
+            <span class="brand__mark" aria-hidden="true"></span>
+            <h1 class="brand__name">NOCTURNE</h1>
+          </div>
+          <p class="brand__tag">Endless transit run</p>
+
+          <button class="btn btn--primary" id="btn-play" type="button">
+            <span>Start Run</span>
+          </button>
+
+          <ul class="keys" aria-label="Controls">
+            <li><kbd>A</kbd><kbd>D</kbd><span>Switch lane</span></li>
+            <li><kbd>W</kbd><kbd>Space</kbd><span>Jump</span></li>
+            <li><kbd>S</kbd><span>Slide</span></li>
+            <li><kbd>Esc</kbd><span>Pause</span></li>
+          </ul>
+
+          <div class="best" id="start-best" hidden>Best <b>0</b></div>
+        </div>
+      </div>
+
+      <div class="screen screen--pause" id="screen-pause">
+        <div class="panel">
+          <h2 class="panel__title">Paused</h2>
+          <div class="panel__stats">
+            <div><span>Score</span><b id="pause-score">0</b></div>
+            <div><span>Distance</span><b id="pause-distance">0m</b></div>
+          </div>
+          <button class="btn btn--primary" id="btn-resume" type="button"><span>Resume</span></button>
+          <button class="btn btn--ghost" id="btn-quit" type="button"><span>End Run</span></button>
+        </div>
+      </div>
+
+      <div class="screen screen--over" id="screen-over">
+        <div class="panel">
+          <h2 class="panel__title" id="over-title">Run Ended</h2>
+          <div class="finalscore"><span id="over-score">0</span></div>
+          <div class="panel__stats">
+            <div><span>Distance</span><b id="over-distance">0m</b></div>
+            <div><span>Sparks</span><b id="over-coins">0</b></div>
+            <div><span>Best</span><b id="over-best">0</b></div>
+          </div>
+          <button class="btn btn--primary" id="btn-retry" type="button"><span>Run Again</span></button>
+          <button class="btn btn--ghost" id="btn-menu" type="button"><span>Main Menu</span></button>
+          <p class="hint"><kbd>R</kbd> to restart</p>
+        </div>
+      </div>
+
+      <button class="sound" id="btn-sound" type="button" aria-label="Toggle sound">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound__wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+      </button>
+
+      <div class="loading" id="loading"><div class="loading__bar"></div></div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
