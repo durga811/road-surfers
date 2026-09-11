@@ -108,6 +108,12 @@ export class ObstacleManager {
     }
   }
 
+  /** Removes a hazard immediately — e.g. one the shield just shattered. */
+  destroy(target: ActiveObstacle): void {
+    const index = this.active.indexOf(target);
+    if (index !== -1) this.recycle(index);
+  }
+
   private recycle(index: number): void {
     const o = this.active[index];
     o.object.visible = false;

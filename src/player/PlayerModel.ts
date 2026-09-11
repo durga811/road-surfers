@@ -3,14 +3,15 @@ import { Geo } from '../render/Geometries';
 import { Mat } from '../render/Materials';
 import { Palette } from '../render/Palette';
 import { clamp, damp, lerp } from '../core/MathUtils';
+import { RunnerRig, contactShadowTexture } from './RunnerRig';
 
 /**
- * The runner: a stylised courier built entirely from primitives, with a
- * hand-authored joint rig driven procedurally (no skinning, no asset
- * load, no animation mixer). Limbs hang off pivot groups so rotations
- * happen at the joint rather than the mesh centre.
+ * Fallback runner: a stylised courier built entirely from primitives,
+ * with a hand-authored joint rig driven procedurally. Used only when the
+ * skinned model cannot be fetched, so the game never depends on a
+ * network request to be playable.
  */
-export class PlayerModel {
+export class PlayerModel implements RunnerRig {
   readonly root = new THREE.Group();
   /**
    * The rig is authored in its own space with +Z as "forward", which is
@@ -107,11 +108,10 @@ export class PlayerModel {
     // ── Contact shadow ───────────────────────────────────────────────
     // A soft blob that always grounds the character, even when real
     // shadows are disabled on the low-quality tier.
-    const shadowTex = makeBlobTexture();
     this.contactShadow = new THREE.Mesh(
       Geo.plane(1.5, 1.5),
       new THREE.MeshBasicMaterial({
-        map: shadowTex,
+        map: contactShadowTexture(),
         transparent: true,
         opacity: 0.5,
         depthWrite: false,
@@ -306,21 +306,4 @@ export class PlayerModel {
     this.body.position.set(0, 0, 0);
     this.body.scale.setScalar(1);
   }
-}
-
-/** Radial-gradient sprite used for the grounding blob. */
-function makeBlobTexture(): THREE.Texture {
-  const size = 64;
-  const canvas = document.createElement('canvas');
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext('2d')!;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  grad.addColorStop(0, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.45, 'rgba(255,255,255,0.55)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, size, size);
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
 }

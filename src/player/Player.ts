@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { PlayerModel } from './PlayerModel';
+import { RunnerRig } from './RunnerRig';
 import { MovementEvents, PlayerMovement } from './PlayerMovement';
 import { InputManager } from '../input/InputManager';
 import {
@@ -22,7 +23,7 @@ export type { PlayerBounds };
 export class Player {
   readonly object = new THREE.Group();
   readonly movement: PlayerMovement;
-  private readonly model = new PlayerModel();
+  private model: RunnerRig = new PlayerModel();
   private readonly bounds: PlayerBounds = { minX: 0, maxX: 0, minY: 0, maxY: 0 };
 
   private readonly shieldBubble: THREE.Group;
@@ -39,6 +40,14 @@ export class Player {
     this.shieldBubble.position.y = 0.9;
     this.shieldBubble.visible = false;
     this.object.add(this.shieldBubble);
+  }
+
+  /** Swap the visual rig (e.g. once the skinned model has loaded). */
+  setRig(rig: RunnerRig): void {
+    this.object.remove(this.model.root);
+    this.model = rig;
+    this.model.reset();
+    this.object.add(this.model.root);
   }
 
   get x(): number { return this.movement.x; }

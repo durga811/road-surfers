@@ -18,7 +18,7 @@ try {
     stage.lockQuality();
   }
 
-  game.start();
+  void game.start();
 
   if (params.has('validate')) {
     void import('./dev/validateGeneration').then((m) => {

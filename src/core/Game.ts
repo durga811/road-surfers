@@ -1,6 +1,7 @@
 import { Stage } from '../render/SceneSetup';
 import { CameraController } from '../render/CameraController';
 import { Player } from '../player/Player';
+import { SkinnedRunner } from '../player/SkinnedRunner';
 import { InputManager } from '../input/InputManager';
 import { TrackManager } from '../world/TrackManager';
 import { CollisionSystem } from '../systems/CollisionSystem';
@@ -109,9 +110,19 @@ export class Game {
     this.loop = new GameLoop(this.update);
   }
 
-  start(): void {
+  async start(): Promise<void> {
     this.track.reset();
     this.camera.reset(false);
+
+    // The skinned runner is the intended character; the primitive rig is
+    // already in place, so a failed fetch degrades to it without a stall.
+    try {
+      const rig = await SkinnedRunner.load(`${import.meta.env.BASE_URL}models/runner.glb`);
+      this.player.setRig(rig);
+    } catch (error) {
+      console.warn('[road-surfers] runner model unavailable, using fallback rig', error);
+    }
+
     this.ui.showStart(this.score.best);
     this.ui.bootComplete();
     this.loop.start();
@@ -385,15 +396,22 @@ export class Game {
     if (!result.obstacle) return;
 
     if (this.powerUps.consumeShield()) {
+      const hit = result.obstacle;
       this.audio.shieldBreak();
       this.ui.flashHit('shield');
       this.ui.popup('Shield Down', POWER_CSS.shield);
       this.camera.addShake(0.55);
       this.player.flinch();
       this.player.setShield(false);
-      this.particles.burst(this.player.x, 1.0, 0, 16, Palette.cyan, {
+      // The shield shatters the hazard rather than phasing through it:
+      // coral shards from the obstacle, cyan from the shield.
+      this.particles.burst(hit.x, 1.0, hit.z, 18, Palette.hazardGlow, {
+        speed: 7, life: 0.6, gravity: 12, scale: 0.8, up: 0.5, spread: 1.3,
+      });
+      this.particles.burst(this.player.x, 1.0, 0, 14, Palette.cyan, {
         speed: 6, life: 0.55, gravity: 10, scale: 0.7, up: 0.5, spread: 1.2,
       });
+      this.track.obstacles.destroy(hit);
       return;
     }
 

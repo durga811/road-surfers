@@ -3,8 +3,10 @@
 A 3D endless runner for desktop browsers. You are a courier on an elevated
 maglev line through a twilight megacity, and the line does not stop.
 
-Built with Vite, TypeScript and Three.js. No art assets, no audio files — every
-mesh, texture and sound is generated at runtime.
+Built with Vite, TypeScript and Three.js. The runner is a skinned GLB
+(`RobotExpressive` by Tomás Laulhé, CC0, via the three.js examples) driven by
+an `AnimationMixer`; everything else — every other mesh, texture and sound — is
+generated at runtime.
 
 ```bash
 npm install
@@ -57,6 +59,13 @@ Three colours carry meaning and nothing else is allowed to use them:
 - **Amber** — reward. Sparks (the coins) and nothing else.
 - **Coral** — danger. Every hazard chassis and every warning stripe.
 
+The runner is a skinned low-poly robot re-skinned into the same palette (pale
+shell, dark joints, cyan-lit visor). Its `Running`, `Jump` and `Death` clips are
+cross-faded with an `AnimationMixer`, the run cycle's time scale follows speed,
+and the slide — which the model has no clip for — is layered on procedurally by
+folding the spine bones after the mixer runs. A procedural primitive rig remains
+as a fallback if the model cannot be fetched.
+
 Everything is flat-shaded low-poly against a deep indigo void, lit by a single
 shadow-casting key, a cool rim and a sky bounce, with a restrained half-
 resolution bloom on the emissive trim. Hazards carry a **chevron on the face you
@@ -78,7 +87,7 @@ src/
   core/        Game · GameLoop · GameState · Config · Random · ObjectPool · MathUtils
   render/      SceneSetup (Stage) · CameraController · Materials · Geometries ·
                PartBuilder · Palette · Sky
-  player/      Player · PlayerMovement · PlayerModel
+  player/      Player · PlayerMovement · SkinnedRunner · PlayerModel (fallback) · RunnerRig
   input/       InputManager
   world/       TrackManager · ProceduralGenerator · Patterns · PathSolver ·
                ObstacleTypes · ObstacleManager · CollectibleManager ·
