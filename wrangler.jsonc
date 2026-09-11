@@ -1,0 +1,13 @@
+// Cloudflare Workers — static assets deployment.
+// The game is entirely client-side, so there is no Worker script: every
+// request is served from the edge asset cache.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "road-surfers",
+  "compatibility_date": "2026-09-01",
+  "assets": {
+    "directory": "./dist",
+    // Return index.html for unknown paths so deep links / refreshes never 404.
+    "not_found_handling": "single-page-application"
+  }
+}

@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "validate": "esbuild src/dev/runValidation.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/validate.mjs --log-level=error && node node_modules/.cache/nocturne/validate.mjs",
     "soak": "esbuild src/dev/runSoak.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/soak.mjs --log-level=error && node node_modules/.cache/nocturne/soak.mjs",
-    "test": "npm run typecheck && npm run validate && npm run soak"
+    "test": "npm run typecheck && npm run validate && npm run soak",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "three": "^0.180.0"
@@ -19,6 +20,7 @@
   "devDependencies": {
     "@types/three": "^0.180.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7"
+    "vite": "^6.0.7",
+    "wrangler": "^4.131.0"
   }
 }
