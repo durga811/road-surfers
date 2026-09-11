@@ -1,4 +1,4 @@
-/* ── Nocturne — UI system ───────────────────────────────────────────
+/* ── Road Surfers — UI system ───────────────────────────────────────────
    One palette, one type scale, one motion curve. Nothing else.      */
 
 :root {
@@ -85,7 +85,8 @@ body { cursor: default; user-select: none; }
 }
 .stat__value.is-bump { transform: scale(1.09); }
 
-.stat--right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+/* Sits beneath the pause/sound cluster so the two never collide. */
+.stat--right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; padding-top: 44px; }
 
 .chip {
   display: flex; align-items: center; gap: 7px;
@@ -193,16 +194,19 @@ body { cursor: default; user-select: none; }
   opacity: 0.55;
 }
 
-.brand { display: flex; align-items: center; gap: 13px; }
-.brand__mark {
-  width: 13px; height: 13px; border-radius: 3px;
-  background: linear-gradient(135deg, var(--cyan), var(--mint));
-  box-shadow: 0 0 22px rgba(77, 227, 255, 0.65);
-  animation: mark-pulse 3.2s var(--ease) infinite;
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand__logo {
+  width: 48px; height: 48px; flex: none;
+  filter: drop-shadow(0 0 14px rgba(77, 227, 255, 0.45));
 }
-@keyframes mark-pulse { 50% { transform: rotate(45deg) scale(0.86); } }
+.brand__logo path {
+  fill: none; stroke-width: 4.2; stroke-linecap: round; stroke-linejoin: round;
+}
+.brand__lanes { stroke: url(#logo-grad); }
+.brand__wave  { stroke: var(--mint); animation: wave-drift 3.2s var(--ease) infinite; }
+@keyframes wave-drift { 50% { transform: translateY(-2px); } }
 .brand__name {
-  font-size: 40px; font-weight: 800; letter-spacing: 0.16em; line-height: 1;
+  font-size: 32px; font-weight: 800; letter-spacing: 0.14em; line-height: 1;
   background: linear-gradient(180deg, #ffffff, #a8c4ff);
   -webkit-background-clip: text; background-clip: text; color: transparent;
 }
@@ -291,18 +295,30 @@ kbd {
 .hint { margin-top: 16px; font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em; }
 .hint kbd { margin-right: 5px; }
 
-/* ── Sound toggle ────────────────────────────────────────────────── */
-.sound {
+/* ── Top-right controls ──────────────────────────────────────────── */
+.topbar {
   position: absolute; right: 30px; top: 28px; z-index: 7;
+  display: flex; gap: 8px;
+}
+.iconbtn {
   width: 34px; height: 34px; display: grid; place-items: center;
   background: var(--panel-bg); border: 1px solid var(--panel-line);
   border-radius: 10px; cursor: pointer;
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  transition: opacity 0.25s var(--ease), border-color 0.25s var(--ease);
+  transition: opacity 0.25s var(--ease), border-color 0.25s var(--ease), transform 0.2s var(--ease);
   opacity: 0.55;
 }
-.sound:hover { opacity: 1; border-color: rgba(140, 180, 255, 0.3); }
-.sound svg { width: 17px; height: 17px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+.iconbtn:hover { opacity: 1; border-color: rgba(140, 180, 255, 0.3); }
+.iconbtn:active { transform: scale(0.94); }
+.iconbtn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.iconbtn svg { width: 17px; height: 17px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
+
+.iconbtn--pause svg rect { fill: var(--ink); stroke: none; }
+/* Pause only means something mid-run. */
+.iconbtn--pause { display: none; }
+.topbar.is-running .iconbtn--pause { display: grid; }
+
+.sound { position: relative; }
 .sound svg path:first-child { fill: var(--ink); }
 .sound.is-muted { opacity: 0.35; }
 .sound.is-muted .sound__wave { opacity: 0; }
@@ -310,9 +326,6 @@ kbd {
   content: ""; position: absolute; width: 20px; height: 1.6px; background: var(--ink);
   transform: rotate(-45deg); border-radius: 2px;
 }
-
-/* HUD is hidden behind menus; sound button rides above everything. */
-.screen--start.is-visible ~ .sound { opacity: 0.55; }
 
 /* ── Boot loader ─────────────────────────────────────────────────── */
 .loading {
@@ -331,7 +344,8 @@ kbd {
 
 @media (max-height: 640px) {
   .panel { padding: 26px 32px 24px; }
-  .brand__name { font-size: 32px; }
+  .brand__name { font-size: 26px; }
+  .brand__logo { width: 38px; height: 38px; }
   .finalscore { font-size: 48px; }
   .keys { margin-top: 18px; gap: 9px 22px; }
 }

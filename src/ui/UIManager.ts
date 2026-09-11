@@ -14,6 +14,7 @@ export interface UICallbacks {
   onRetry: () => void;
   onMenu: () => void;
   onToggleSound: (muted: boolean) => void;
+  onPause: () => void;
 }
 
 /**
@@ -36,6 +37,7 @@ export class UIManager {
   private readonly powerupsEl: HTMLElement;
   private readonly popupsEl: HTMLElement;
   private readonly soundBtn: HTMLElement;
+  private readonly topbar: HTMLElement;
 
   private lastScore = -1;
   private lastCoins = -1;
@@ -65,12 +67,14 @@ export class UIManager {
     this.powerupsEl = $('hud-powerups');
     this.popupsEl = $('hud-popups');
     this.soundBtn = $('btn-sound');
+    this.topbar = this.soundBtn.parentElement as HTMLElement;
 
     $('btn-play').addEventListener('click', callbacks.onPlay);
     $('btn-resume').addEventListener('click', callbacks.onResume);
     $('btn-quit').addEventListener('click', callbacks.onQuit);
     $('btn-retry').addEventListener('click', callbacks.onRetry);
     $('btn-menu').addEventListener('click', callbacks.onMenu);
+    $('btn-pause').addEventListener('click', callbacks.onPause);
     this.soundBtn.addEventListener('click', () => {
       const muted = !this.soundBtn.classList.contains('is-muted');
       this.setMuted(muted);
@@ -94,6 +98,11 @@ export class UIManager {
 
   setHudVisible(visible: boolean): void {
     this.hud.classList.toggle('is-visible', visible);
+  }
+
+  /** Shows the on-screen pause control only while a run is live. */
+  setRunning(running: boolean): void {
+    this.topbar.classList.toggle('is-running', running);
   }
 
   // ── HUD ────────────────────────────────────────────────────────────

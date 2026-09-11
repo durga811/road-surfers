@@ -3,14 +3,14 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "Nocturne \u2014 a 3D endless runner through a twilight megacity transit line.",
+  "description": "Road Surfers — a 3D endless runner through a twilight megacity transit line.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 4173",
     "typecheck": "tsc --noEmit",
-    "validate": "esbuild src/dev/runValidation.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/validate.mjs --log-level=error && node node_modules/.cache/nocturne/validate.mjs",
-    "soak": "esbuild src/dev/runSoak.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/nocturne/soak.mjs --log-level=error && node node_modules/.cache/nocturne/soak.mjs",
+    "validate": "esbuild src/dev/runValidation.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/road-surfers/validate.mjs --log-level=error && node node_modules/.cache/road-surfers/validate.mjs",
+    "soak": "esbuild src/dev/runSoak.ts --bundle --format=esm --platform=node --outfile=node_modules/.cache/road-surfers/soak.mjs --log-level=error && node node_modules/.cache/road-surfers/soak.mjs",
     "test": "npm run typecheck && npm run validate && npm run soak",
     "deploy": "npm run build && wrangler deploy"
   },

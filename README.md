@@ -1,4 +1,4 @@
-# Nocturne
+# Road Surfers
 
 A 3D endless runner for desktop browsers. You are a courier on an elevated
 maglev line through a twilight megacity, and the line does not stop.
@@ -32,13 +32,21 @@ fairness harness in the browser console.
 | Move right | `D` · `→` |
 | Jump | `W` · `↑` · `Space` |
 | Slide | `S` · `↓` |
-| Pause | `Esc` · `P` |
+| Pause | `Esc` · `P` · on-screen button |
 | Restart | `R` |
 | Mute | `M` |
 
 Sliding can be cancelled into a jump, and pressing slide in mid-air fast-falls
 and slides the moment you land. Jump and slide inputs are buffered for 140 ms,
 so a press made just before landing still fires.
+
+## Deploying
+
+Hosted on Cloudflare Workers as static assets ([wrangler.jsonc](wrangler.jsonc)).
+Either connect the GitHub repo in the Cloudflare dashboard (Workers & Pages →
+Import a repository; build `npm run build`, deploy `npx wrangler deploy`) so
+every push to `main` goes live, or run `npm run deploy` locally after
+`npx wrangler login`.
 
 ## Visual direction
 

@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Nocturne — an endless maglev run through a twilight megacity." />
+    <meta name="description" content="Road Surfers — a 3D endless runner through a twilight megacity." />
     <meta name="theme-color" content="#070b18" />
-    <title>Nocturne — Endless Transit Run</title>
+    <title>Road Surfers</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070b18'/%3E%3Cpath d='M20 50 L28 14 M32 50 L32 14 M44 50 L36 14' stroke='%234de3ff' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3Cpath d='M12 40 Q22 30 32 40 T52 40' stroke='%238affd6' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
   </head>
   <body>
     <div id="app">
@@ -48,8 +49,18 @@
       <div class="screen screen--start is-visible" id="screen-start">
         <div class="panel panel--title">
           <div class="brand">
-            <span class="brand__mark" aria-hidden="true"></span>
-            <h1 class="brand__name">NOCTURNE</h1>
+            <svg class="brand__logo" viewBox="0 0 64 64" aria-hidden="true">
+              <defs>
+                <linearGradient id="logo-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#4de3ff" />
+                  <stop offset="1" stop-color="#8affd6" />
+                </linearGradient>
+              </defs>
+              <!-- Three lanes converging to the horizon, and the surf line across them -->
+              <path class="brand__lanes" d="M20 52 L28 12 M32 52 L32 12 M44 52 L36 12" />
+              <path class="brand__wave" d="M10 40 Q21 29 32 40 T54 40" />
+            </svg>
+            <h1 class="brand__name">ROAD SURFERS</h1>
           </div>
           <p class="brand__tag">Endless transit run</p>
 
@@ -95,9 +106,14 @@
         </div>
       </div>
 
-      <button class="sound" id="btn-sound" type="button" aria-label="Toggle sound">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound__wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
-      </button>
+      <div class="topbar">
+        <button class="iconbtn iconbtn--pause" id="btn-pause" type="button" aria-label="Pause" title="Pause (Esc)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+        </button>
+        <button class="iconbtn sound" id="btn-sound" type="button" aria-label="Toggle sound" title="Mute (M)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound__wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
+        </button>
+      </div>
 
       <div class="loading" id="loading"><div class="loading__bar"></div></div>
     </div>

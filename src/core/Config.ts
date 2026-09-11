@@ -1,5 +1,5 @@
 /**
- * Nocturne — tuning constants.
+ * Road Surfers — tuning constants.
  * Everything a designer would want to touch lives here; nothing else
  * in the codebase hard-codes gameplay numbers.
  */
@@ -76,5 +76,5 @@ export const FOG_NEAR = 45;
 export const FOG_FAR = 235;
 export const MAX_PIXEL_RATIO = 1.75;
 
-export const STORAGE_KEY = 'nocturne.best.v1';
-export const STORAGE_MUTE = 'nocturne.mute.v1';
+export const STORAGE_KEY = 'road-surfers.best.v1';
+export const STORAGE_MUTE = 'road-surfers.mute.v1';

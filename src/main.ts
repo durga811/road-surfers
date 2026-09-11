@@ -36,7 +36,7 @@ try {
     'font:14px/1.6 system-ui,sans-serif;color:#e8eeff;background:#070b18;z-index:99';
   panel.innerHTML =
     '<div><h1 style="font-size:20px;letter-spacing:.12em;margin-bottom:10px">WEBGL UNAVAILABLE</h1>' +
-    '<p style="opacity:.6;max-width:34ch">Nocturne needs hardware-accelerated WebGL. ' +
+    '<p style="opacity:.6;max-width:34ch">Road Surfers needs hardware-accelerated WebGL. ' +
     'Try a different browser or enable GPU acceleration.</p></div>';
   document.body.appendChild(panel);
 }

@@ -96,6 +96,7 @@ export class Game {
       onQuit: () => this.toMenu(),
       onRetry: () => this.startRun(),
       onMenu: () => this.toMenu(),
+      onPause: () => this.togglePause(),
       onToggleSound: (muted) => {
         this.audio.unlock();
         this.audio.setMuted(muted);
@@ -144,6 +145,7 @@ export class Game {
     this.ui.updatePowerUps(this.powerUps.active);
 
     this.audio.startMusic();
+    this.ui.setRunning(true);
     this.state.set(Phase.Running);
   }
 
@@ -156,6 +158,7 @@ export class Game {
     this.camera.reset(false);
     this.input.setEnabled(false);
     this.ui.setHudVisible(false);
+    this.ui.setRunning(false);
     this.ui.showStart(this.score.best);
     this.audio.stopMusic();
     this.state.set(Phase.Menu);
@@ -167,6 +170,7 @@ export class Game {
       this.input.setEnabled(false);
       this.audio.duckMusic();
       this.audio.uiBack();
+      this.ui.setRunning(false);
       this.ui.showPause(this.score.score, this.score.distance);
     } else if (this.state.current === Phase.Paused) {
       this.resume();
@@ -180,12 +184,14 @@ export class Game {
     this.input.clear();
     this.input.setEnabled(true);
     this.ui.showScreen(null);
+    this.ui.setRunning(true);
     this.state.set(Phase.Running);
   }
 
   private die(): void {
     this.state.set(Phase.Dying);
     this.input.setEnabled(false);
+    this.ui.setRunning(false);
     this.deathTimer = DEATH_DURATION;
     this.deathSpeed = this.difficulty.speed;
 
