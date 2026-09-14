@@ -88,6 +88,21 @@ export const CAMERA_FOV_MAX = 74;
 export const FOG_NEAR = 45;
 export const FOG_FAR = 235;
 export const MAX_PIXEL_RATIO = 1.75;
+/**
+ * Phones report a device pixel ratio of 3 or more. Honouring it would
+ * mean shading nine times the fragments of a 1× buffer for a display
+ * small enough that the difference is invisible.
+ */
+export const MAX_PIXEL_RATIO_TOUCH = 1.5;
+
+/**
+ * The aspect the camera framing was tuned at. Narrower viewports widen
+ * the vertical FOV to hold the same horizontal view, so the outer lanes
+ * never fall off the sides of a phone in landscape.
+ */
+export const REFERENCE_ASPECT = 16 / 9;
+export const CAMERA_FOV_CEILING = 90;
 
 export const STORAGE_KEY = 'road-surfers.best.v1';
 export const STORAGE_MUTE = 'road-surfers.mute.v1';
+export const STORAGE_SCHEME = 'road-surfers.scheme.v1';

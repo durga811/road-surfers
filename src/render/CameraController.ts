@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import {
   CAMERA_FOV_BASE,
+  CAMERA_FOV_CEILING,
   CAMERA_FOV_MAX,
   CAMERA_LOOK_AHEAD,
   CAMERA_OFFSET,
+  REFERENCE_ASPECT,
 } from '../core/Config';
 import { clamp, damp, lerp } from '../core/MathUtils';
 
@@ -39,6 +41,22 @@ export class CameraController {
     this.camera.updateProjectionMatrix();
   }
 
+  /**
+   * Converts a vertical FOV tuned at REFERENCE_ASPECT into the vertical
+   * FOV that preserves the same *horizontal* view at the current aspect.
+   * Without this, a phone in landscape (or any narrow window) crops the
+   * outer lanes out of frame and the game becomes unfair rather than
+   * merely ugly.
+   */
+  private forAspect(fov: number): number {
+    const aspect = this.camera.aspect;
+    if (aspect >= REFERENCE_ASPECT) return fov;
+    const halfV = (fov * Math.PI) / 360;
+    const halfH = Math.atan(Math.tan(halfV) * REFERENCE_ASPECT);
+    const widened = (2 * Math.atan(Math.tan(halfH) / aspect) * 180) / Math.PI;
+    return Math.min(widened, CAMERA_FOV_CEILING);
+  }
+
   /** Menu framing: a slow orbit that shows off the runner and the city. */
   updateMenu(dt: number, time: number): void {
     const radius = 4.6;
@@ -50,7 +68,7 @@ export class CameraController {
     );
     this.lookTarget.set(0, 0.75, 0);
     this.camera.lookAt(this.lookTarget);
-    this.camera.fov = damp(this.camera.fov, 52, 3, dt);
+    this.camera.fov = damp(this.camera.fov, this.forAspect(52), 3, dt);
     this.camera.updateProjectionMatrix();
   }
 
@@ -106,7 +124,9 @@ export class CameraController {
       dt,
     );
 
-    const fovTarget = CAMERA_FOV_BASE + (CAMERA_FOV_MAX - CAMERA_FOV_BASE) * intensity;
+    const fovTarget = this.forAspect(
+      CAMERA_FOV_BASE + (CAMERA_FOV_MAX - CAMERA_FOV_BASE) * intensity,
+    );
     this.fov = damp(this.fov, fovTarget + introEase * 6, 2.4, dt);
     if (Math.abs(this.camera.fov - this.fov) > 0.01) {
       this.camera.fov = this.fov;
@@ -132,7 +152,7 @@ export class CameraController {
     this.lookTarget.set(playerX * 0.7, 1.0, -3);
     this.camera.lookAt(this.lookTarget);
     this.camera.rotation.z = damp(this.camera.rotation.z, 0, 3, dt);
-    this.camera.fov = damp(this.camera.fov, 58, 2, dt);
+    this.camera.fov = damp(this.camera.fov, this.forAspect(58), 2, dt);
     this.camera.updateProjectionMatrix();
   }
 

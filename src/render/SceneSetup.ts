@@ -10,6 +10,7 @@ import {
   FOG_FAR,
   FOG_NEAR,
   MAX_PIXEL_RATIO,
+  MAX_PIXEL_RATIO_TOUCH,
 } from '../core/Config';
 import { lerp } from '../core/MathUtils';
 
@@ -35,18 +36,23 @@ export class Stage {
   private readonly shadowTarget = new THREE.Object3D();
 
   quality: QualityLevel = 'high';
+  /** Raised when the GPU drops the context; the game pauses until restore. */
+  onContextLost?: () => void;
+  onContextRestored?: () => void;
+  private readonly touch: boolean;
   private usePost = true;
   private degradeTimer = 0;
   private locked = false;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, touch = false) {
+    this.touch = touch;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
       antialias: true,
       powerPreference: 'high-performance',
       stencil: false,
     });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
+    this.renderer.setPixelRatio(this.targetPixelRatio());
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.06;
@@ -106,8 +112,31 @@ export class Stage {
     this.composer.addPass(new OutputPass());
     this.composer.setSize(window.innerWidth, window.innerHeight);
 
+    // A lost context is routine on mobile (backgrounding, GPU pressure).
+    // Left unhandled it is a permanently frozen black canvas; preventing
+    // the default lets the browser hand the context back, and three
+    // re-uploads the geometry and textures it already holds in memory.
+    canvas.addEventListener('webglcontextlost', this.onContextLostEvent, false);
+    canvas.addEventListener('webglcontextrestored', this.onContextRestoredEvent, false);
+
     window.addEventListener('resize', this.onResize);
+    window.addEventListener('orientationchange', this.onResize);
   }
+
+  private targetPixelRatio(): number {
+    const cap = this.touch ? MAX_PIXEL_RATIO_TOUCH : MAX_PIXEL_RATIO;
+    return Math.min(window.devicePixelRatio, cap);
+  }
+
+  private readonly onContextLostEvent = (event: Event): void => {
+    event.preventDefault();
+    this.onContextLost?.();
+  };
+
+  private readonly onContextRestoredEvent = (): void => {
+    this.setQuality(this.quality);
+    this.onContextRestored?.();
+  };
 
   /**
    * Blends the atmosphere toward "inside a tunnel": closer fog and less
@@ -164,7 +193,7 @@ export class Stage {
         this.bloom.strength = 0.62;
         this.renderer.shadowMap.enabled = true;
         this.keyLight.castShadow = true;
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO));
+        this.renderer.setPixelRatio(this.targetPixelRatio());
         break;
       case 'medium':
         this.usePost = true;
@@ -174,7 +203,7 @@ export class Stage {
         this.keyLight.shadow.mapSize.set(1024, 1024);
         this.keyLight.shadow.map?.dispose();
         this.keyLight.shadow.map = null;
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.25));
+        this.renderer.setPixelRatio(Math.min(this.targetPixelRatio(), 1.25));
         break;
       case 'low':
         this.usePost = false;
@@ -205,6 +234,7 @@ export class Stage {
 
   dispose(): void {
     window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('orientationchange', this.onResize);
     this.composer.dispose();
     this.renderer.dispose();
   }

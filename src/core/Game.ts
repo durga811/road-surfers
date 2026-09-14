@@ -3,6 +3,8 @@ import { CameraController } from '../render/CameraController';
 import { Player } from '../player/Player';
 import { SkinnedRunner } from '../player/SkinnedRunner';
 import { InputManager } from '../input/InputManager';
+import { hasTouchScreen, prefersTouchUI, TouchInput } from '../input/TouchInput';
+import { TouchControls } from '../input/TouchControls';
 import { TrackManager } from '../world/TrackManager';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { ActiveObstacle } from '../world/ObstacleManager';
@@ -11,7 +13,7 @@ import { ScoreSystem } from '../systems/ScoreSystem';
 import { PowerUpSystem } from '../systems/PowerUpSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { AudioManager } from '../audio/AudioManager';
-import { UIManager } from '../ui/UIManager';
+import { ControlScheme, UIManager } from '../ui/UIManager';
 import { GameLoop } from './GameLoop';
 import { GameState, Phase } from './GameState';
 import { Random } from './Random';
@@ -19,7 +21,7 @@ import { Palette } from '../render/Palette';
 import { PowerUpKind } from '../world/ProceduralGenerator';
 import { POWER_CSS, POWER_LABEL } from '../systems/PowerUpSystem';
 import { clamp, damp } from './MathUtils';
-import { SPEED_START } from './Config';
+import { SPEED_START, STORAGE_SCHEME } from './Config';
 
 const MENU_SPEED = 8.5;
 const DEATH_DURATION = 1.35;
@@ -46,6 +48,11 @@ export class Game {
   private readonly state = new GameState();
   private readonly loop: GameLoop;
   private readonly rng = new Random();
+  /** A touchscreen exists — listen for swipes regardless of UI choice. */
+  private readonly touchCapable = hasTouchScreen();
+  private readonly touchInput: TouchInput | null;
+  private touchUI = prefersTouchUI();
+  private scheme: ControlScheme = 'swipe';
 
   private enclosure = 0;
   private lastTier = 0;
@@ -56,7 +63,7 @@ export class Game {
   private isRecord = false;
 
   constructor(canvas: HTMLCanvasElement) {
-    this.stage = new Stage(canvas);
+    this.stage = new Stage(canvas, this.touchUI);
     this.camera = new CameraController(this.stage.camera);
 
     this.input = new InputManager();
@@ -98,6 +105,7 @@ export class Game {
       onRetry: () => this.startRun(),
       onMenu: () => this.toMenu(),
       onPause: () => this.togglePause(),
+      onScheme: (scheme) => this.setScheme(scheme),
       onToggleSound: (muted) => {
         this.audio.unlock();
         this.audio.setMuted(muted);
@@ -105,7 +113,33 @@ export class Game {
       },
     });
     this.ui.setMuted(this.audio.isMuted);
+    this.ui.setTouchMode(this.touchUI);
 
+    if (this.touchCapable) {
+      this.touchInput = new TouchInput(canvas, this.input);
+      new TouchControls(document.getElementById('touchpad')!, this.input);
+      this.setScheme(loadScheme(), false);
+      // Whichever device it turns out to be, the first real input tells
+      // us which hints to show — far more reliable than guessing from
+      // media queries on hybrids and touchscreen laptops.
+      this.touchInput.onFirstTouch = () => this.setInputMethod(true);
+      this.input.onKeyboardUse = () => this.setInputMethod(false);
+    } else {
+      this.touchInput = null;
+    }
+
+    if (this.touchUI) {
+      // Phones start a tier down: a 3× display and a mobile GPU cannot
+      // afford full-resolution bloom, and discovering that by dropping
+      // frames for the first few seconds is a poor first impression.
+      this.stage.setQuality('medium');
+    }
+
+    this.stage.onContextLost = () => {
+      if (this.state.current === Phase.Running) this.togglePause();
+    };
+
+    this.watchOrientation();
     this.bindCommands();
     this.loop = new GameLoop(this.update);
   }
@@ -451,10 +485,57 @@ export class Game {
     });
   }
 
+  private setScheme(scheme: ControlScheme, feedback = true): void {
+    this.scheme = scheme;
+    this.ui.setScheme(scheme);
+    // Swipes and buttons are mutually exclusive: leaving the swipe
+    // recogniser live under the pad would fire a lane change every time
+    // a thumb drifted off a button.
+    this.touchInput?.setEnabled(scheme === 'swipe');
+    if (feedback) {
+      this.audio.unlock();
+      this.audio.uiClick();
+    }
+    try {
+      localStorage.setItem(STORAGE_SCHEME, scheme);
+    } catch { /* storage unavailable */ }
+  }
+
+  /** Last input method wins: swaps the on-screen hints and the pad. */
+  private setInputMethod(touch: boolean): void {
+    if (this.touchUI === touch) return;
+    this.touchUI = touch;
+    this.ui.setTouchMode(touch);
+    if (touch) this.touchInput?.setEnabled(this.scheme === 'swipe');
+  }
+
+  private watchOrientation(): void {
+    // Measure the viewport directly and listen on resize as well as the
+    // media query: `orientationchange` is unreliable across browsers and
+    // some fire it before the new dimensions are readable.
+    const apply = (): void => {
+      const portrait = window.innerHeight > window.innerWidth;
+      this.ui.setPortrait(portrait);
+      if (portrait && this.touchUI && this.state.current === Phase.Running) this.togglePause();
+    };
+    window.addEventListener('resize', apply);
+    window.matchMedia('(orientation: portrait)').addEventListener('change', apply);
+    apply();
+  }
+
   dispose(): void {
     this.loop.stop();
+    this.touchInput?.dispose();
     this.input.dispose();
     this.stage.dispose();
+  }
+}
+
+function loadScheme(): ControlScheme {
+  try {
+    return localStorage.getItem(STORAGE_SCHEME) === 'buttons' ? 'buttons' : 'swipe';
+  } catch {
+    return 'swipe';
   }
 }
 

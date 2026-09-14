@@ -28,6 +28,16 @@ fairness harness in the browser console.
 
 ## Controls
 
+Desktop keyboard and touch both work; the on-screen hints follow whichever you
+last used, so a touchscreen laptop is not forced into either.
+
+**Touch** — swipe left/right to change lane, swipe up or tap to jump, swipe down
+to slide. Swipes fire the instant the threshold is crossed rather than on
+release, and the origin resets after each one so a single drag can chain lane
+changes. A thumb-button pad is available instead via the toggle on the start
+screen. Landscape only: portrait leaves the three lanes too narrow to read, so
+the game asks you to rotate.
+
 | Action | Keys |
 | --- | --- |
 | Move left | `A` · `←` |
@@ -269,10 +279,19 @@ Decisions behind that:
   and shadows entirely. One-way, so it never oscillates mid-run.
 - **Delta time is clamped** to 50 ms, and collision is swept in Z, so a
   backgrounded tab cannot teleport the player through a wall on return.
+- **Touch devices start a tier down** and cap the device pixel ratio at 1.5.
+  A phone reporting a ratio of 3 would otherwise shade nine times the fragments
+  of a 1× buffer for a screen too small to show the difference.
+- **WebGL context loss is handled.** Losing the context is routine on mobile;
+  unhandled it is a permanently frozen black canvas. The game pauses on loss and
+  resumes when the browser hands the context back.
+- **Vertical FOV widens on narrow viewports** to hold the horizontal view
+  constant, so the outer lanes never fall off the sides of a short window.
 
 ## Known limitations
 
-- Desktop and laptop only by design — there are no touch controls.
+- Portrait on phones is gated behind a rotate prompt rather than supported; the
+  camera framing and lane spacing are built for landscape.
 - The soak bot occasionally misplays a two-lane wall at top speed (≈ 0.4% of
   hazards). A route always exists, so this is a limit of the test fixture's
   30 Hz replanning, not of the generated track.

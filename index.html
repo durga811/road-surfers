@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="description" content="Road Surfers — a 3D endless runner through a twilight megacity." />
     <meta name="theme-color" content="#070b18" />
     <title>Road Surfers</title>
@@ -22,6 +22,11 @@
           <div class="stat stat--score">
             <span class="stat__label">Score</span>
             <span class="stat__value" id="hud-score">0</span>
+
+            <div class="hud__speed">
+              <div class="speed__track"><div class="speed__fill" id="hud-speed"></div></div>
+              <span class="speed__label">Velocity</span>
+            </div>
           </div>
           <div class="stat stat--right">
             <div class="chip chip--coin">
@@ -33,15 +38,10 @@
             <div class="chip chip--dist">
               <span id="hud-distance">0</span><em>m</em>
             </div>
+            <div class="powerups" id="hud-powerups"></div>
           </div>
         </div>
 
-        <div class="hud__speed">
-          <div class="speed__track"><div class="speed__fill" id="hud-speed"></div></div>
-          <span class="speed__label">Velocity</span>
-        </div>
-
-        <div class="powerups" id="hud-powerups"></div>
         <div class="popups" id="hud-popups"></div>
       </div>
 
@@ -68,12 +68,23 @@
             <span>Start Run</span>
           </button>
 
-          <ul class="keys" aria-label="Controls">
+          <ul class="keys keys--desktop" aria-label="Keyboard controls">
             <li><kbd>A</kbd><kbd>D</kbd><span>Switch lane</span></li>
             <li><kbd>W</kbd><kbd>Space</kbd><span>Jump</span></li>
             <li><kbd>S</kbd><span>Slide</span></li>
             <li><kbd>Esc</kbd><span>Pause</span></li>
           </ul>
+
+          <ul class="keys keys--touch" aria-label="Touch controls">
+            <li><kbd>←→</kbd><span>Swipe to switch lane</span></li>
+            <li><kbd>↑</kbd><span>Swipe up or tap to jump</span></li>
+            <li><kbd>↓</kbd><span>Swipe down to slide</span></li>
+          </ul>
+
+          <div class="scheme" id="scheme" role="group" aria-label="Control scheme">
+            <button type="button" class="scheme__opt is-active" data-scheme="swipe">Swipe</button>
+            <button type="button" class="scheme__opt" data-scheme="buttons">Buttons</button>
+          </div>
 
           <div class="best" id="start-best" hidden>Best <b>0</b></div>
         </div>
@@ -113,6 +124,33 @@
         <button class="iconbtn sound" id="btn-sound" type="button" aria-label="Toggle sound" title="Mute (M)">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="sound__wave" d="M16.5 8.5a5 5 0 0 1 0 7"/></svg>
         </button>
+      </div>
+
+      <div class="touchpad" id="touchpad">
+        <div class="touchpad__side">
+          <button class="tbtn" type="button" data-action="left" aria-label="Move left">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+          </button>
+          <button class="tbtn" type="button" data-action="right" aria-label="Move right">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <div class="touchpad__side">
+          <button class="tbtn tbtn--slide" type="button" data-action="slide" aria-label="Slide">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg>
+          </button>
+          <button class="tbtn tbtn--jump" type="button" data-action="jump" aria-label="Jump">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="rotate" id="rotate">
+        <div class="rotate__inner">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2.5"/><path d="M9 19h6"/></svg>
+          <p>Rotate your device</p>
+          <span>Road Surfers plays in landscape</span>
+        </div>
       </div>
 
       <div class="loading" id="loading"><div class="loading__bar"></div></div>

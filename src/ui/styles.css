@@ -29,6 +29,7 @@
 html, body {
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;          /* no pull-to-refresh mid-run */
   background: var(--void);
   color: var(--ink);
   font-family: var(--font);
@@ -36,8 +37,18 @@ html, body {
   text-rendering: optimizeLegibility;
 }
 
-body { cursor: default; user-select: none; }
+body {
+  cursor: default;
+  user-select: none; -webkit-user-select: none;
+  /* The page must never pan, pinch or double-tap-zoom under a swipe. */
+  touch-action: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 
+/* Fixed inset rather than 100vh: mobile browsers report 100vh as the
+   height *without* their collapsing toolbars, which leaves the canvas
+   taller than the visible area. */
 #app { position: fixed; inset: 0; }
 
 #scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
@@ -64,7 +75,8 @@ body { cursor: default; user-select: none; }
 
 .hud {
   position: absolute; inset: 0; z-index: 4; pointer-events: none;
-  padding: 28px 32px;
+  padding: max(28px, env(safe-area-inset-top)) max(32px, env(safe-area-inset-right))
+           28px max(32px, env(safe-area-inset-left));
   opacity: 0; transition: opacity 0.5s var(--ease);
 }
 .hud.is-visible { opacity: 1; }
@@ -111,7 +123,8 @@ body { cursor: default; user-select: none; }
 }
 
 .hud__speed {
-  position: absolute; left: 32px; bottom: 30px;
+  position: absolute; bottom: max(30px, env(safe-area-inset-bottom));
+  left: max(32px, env(safe-area-inset-left));
   display: flex; align-items: center; gap: 10px;
 }
 .speed__track {
@@ -131,7 +144,8 @@ body { cursor: default; user-select: none; }
 }
 
 .powerups {
-  position: absolute; right: 32px; bottom: 28px;
+  position: absolute; bottom: max(28px, env(safe-area-inset-bottom));
+  right: max(32px, env(safe-area-inset-right));
   display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
 }
 .pu {
@@ -277,6 +291,28 @@ body { cursor: default; user-select: none; }
   text-transform: uppercase; font-weight: 600; margin-left: 3px;
 }
 
+/* ── Control scheme toggle (touch devices only) ──────────────────── */
+.scheme {
+  display: none; margin-top: 18px; padding: 3px; gap: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-line); border-radius: 11px;
+}
+body.is-touch .scheme { display: flex; }
+.scheme__opt {
+  flex: 1; padding: 9px 20px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink-faint);
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.scheme__opt.is-active { background: rgba(77, 227, 255, 0.16); color: var(--cyan); }
+
+/* Control hints follow the device. */
+.keys--touch { display: none; }
+body.is-touch .keys--desktop { display: none; }
+body.is-touch .keys--touch { display: grid; grid-template-columns: auto; }
+body.is-touch .hint { display: none; }
+
 kbd {
   display: inline-flex; align-items: center; justify-content: center;
   min-width: 22px; height: 22px; padding: 0 6px;
@@ -295,11 +331,34 @@ kbd {
 .best b { color: var(--amber); margin-left: 4px; }
 
 .hint { margin-top: 16px; font-size: 10px; color: var(--ink-faint); letter-spacing: 0.1em; }
-.hint kbd { margin-right: 5px; }
+.hint /* ── Control scheme toggle (touch devices only) ──────────────────── */
+.scheme {
+  display: none; margin-top: 18px; padding: 3px; gap: 3px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-line); border-radius: 11px;
+}
+body.is-touch .scheme { display: flex; }
+.scheme__opt {
+  flex: 1; padding: 9px 20px; border: 0; border-radius: 8px;
+  background: transparent; color: var(--ink-faint);
+  font-family: inherit; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.scheme__opt.is-active { background: rgba(77, 227, 255, 0.16); color: var(--cyan); }
+
+/* Control hints follow the device. */
+.keys--touch { display: none; }
+body.is-touch .keys--desktop { display: none; }
+body.is-touch .keys--touch { display: grid; grid-template-columns: auto; }
+body.is-touch .hint { display: none; }
+
+kbd { margin-right: 5px; }
 
 /* ── Top-right controls ──────────────────────────────────────────── */
 .topbar {
-  position: absolute; right: 30px; top: 28px; z-index: 7;
+  position: absolute; z-index: 7;
+  right: max(30px, env(safe-area-inset-right)); top: max(28px, env(safe-area-inset-top));
   display: flex; gap: 8px;
 }
 .iconbtn {
@@ -329,6 +388,65 @@ kbd {
   transform: rotate(-45deg); border-radius: 2px;
 }
 
+/* With the thumb pad on screen the bottom corners belong to the hands,
+   so the readouts move up under the score and the chips: information at
+   the top, controls at the bottom, no overlap at any size. */
+body.is-touch.scheme-buttons.is-playing .hud__speed {
+  position: static; margin-top: 14px;
+}
+body.is-touch.scheme-buttons.is-playing .hud__top {
+  align-items: flex-start;
+}
+body.is-touch.scheme-buttons.is-playing .stat--score {
+  display: flex; flex-direction: column; align-items: flex-start;
+}
+body.is-touch.scheme-buttons.is-playing .powerups {
+  position: static; margin-top: 10px; align-items: flex-end;
+}
+
+/* ── On-screen control pad ───────────────────────────────────────── */
+.touchpad {
+  position: absolute; inset: auto 0 0 0; z-index: 5;
+  display: none; justify-content: space-between; align-items: flex-end;
+  padding: 0 max(22px, env(safe-area-inset-left)) max(22px, env(safe-area-inset-bottom))
+           max(22px, env(safe-area-inset-right));
+  pointer-events: none;
+}
+/* Shown only while a run is live, and only in the buttons scheme. */
+body.is-touch.scheme-buttons.is-playing .touchpad { display: flex; }
+
+.touchpad__side { display: flex; gap: 14px; pointer-events: none; }
+.tbtn {
+  width: 66px; height: 66px; display: grid; place-items: center;
+  border-radius: 20px; pointer-events: auto;
+  background: rgba(10, 15, 32, 0.5);
+  border: 1px solid var(--panel-line);
+  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  transition: transform 0.09s var(--ease), background 0.09s var(--ease);
+  touch-action: none;
+}
+.tbtn svg { width: 28px; height: 28px; fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.tbtn.is-down { transform: scale(0.9); background: rgba(77, 227, 255, 0.22); }
+.tbtn--jump svg { stroke: var(--mint); }
+.tbtn--slide svg { stroke: var(--cyan); }
+
+/* ── Rotate prompt ───────────────────────────────────────────────── */
+.rotate {
+  position: absolute; inset: 0; z-index: 15; display: none;
+  place-items: center; background: var(--void); text-align: center;
+}
+/* Portrait on a phone leaves the three lanes unreadably narrow. */
+body.is-touch.is-portrait .rotate { display: grid; }
+.rotate__inner { display: grid; gap: 14px; justify-items: center; padding: 32px; }
+.rotate svg {
+  width: 46px; height: 46px; fill: none; stroke: var(--cyan);
+  stroke-width: 1.6; stroke-linecap: round;
+  animation: rotate-hint 2.4s var(--ease) infinite;
+}
+@keyframes rotate-hint { 40%, 60% { transform: rotate(-90deg); } }
+.rotate p { font-size: 15px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; }
+.rotate span { font-size: 11px; letter-spacing: 0.12em; color: var(--ink-faint); }
+
 /* ── Boot loader ─────────────────────────────────────────────────── */
 .loading {
   position: absolute; inset: 0; z-index: 20; display: grid; place-items: center;
@@ -343,6 +461,30 @@ kbd {
   animation: load 1.1s linear infinite;
 }
 @keyframes load { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+/* A phone in landscape is very short: shrink the HUD and lift the
+   gauge/pills clear of the thumb pad. */
+@media (max-height: 480px) {
+  .stat__value { font-size: 38px; }
+  .stat__label { font-size: 10px; }
+  .chip { padding: 6px 12px; font-size: 15px; }
+  .chip--dist { font-size: 14px; }
+  .speed__track { width: 150px; height: 5px; }
+  .pu { padding: 7px 11px; font-size: 11px; }
+  .pu__bar { width: 54px; }
+  .hud { padding-top: max(14px, env(safe-area-inset-top)); }
+  .topbar { top: max(14px, env(safe-area-inset-top)); }
+  .tbtn { width: 56px; height: 56px; border-radius: 17px; }
+  .tbtn svg { width: 24px; height: 24px; }
+  .panel { padding: 22px 28px 20px; }
+  .brand__name { font-size: 24px; }
+  .brand__logo { width: 34px; height: 34px; }
+  .brand__tag { margin: 8px 0 16px; }
+  .finalscore { font-size: 40px; margin-bottom: 14px; }
+  .panel__stats { margin-bottom: 16px; padding: 10px 16px; }
+  .keys { margin-top: 14px; }
+  .scheme { margin-top: 12px; }
+}
 
 @media (max-height: 640px) {
   .panel { padding: 26px 32px 24px; }

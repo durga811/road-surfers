@@ -41,6 +41,9 @@ export class InputManager implements ActionSource {
   private readonly commands = new Map<string, () => void>();
   private enabled = true;
 
+  /** Called when a real key is pressed, so the UI can show key hints. */
+  onKeyboardUse?: () => void;
+
   constructor(private readonly target: EventTarget = window) {
     this.target.addEventListener('keydown', this.onKeyDown as EventListener);
     this.target.addEventListener('keyup', this.onKeyUp as EventListener);
@@ -55,6 +58,16 @@ export class InputManager implements ActionSource {
   setEnabled(value: boolean): void {
     this.enabled = value;
     if (!value) this.clear();
+  }
+
+  /**
+   * Queues an action from a non-keyboard source (touch swipe, on-screen
+   * button). Routed through the same buffer so every input path gets
+   * identical timing and forgiveness.
+   */
+  press(action: Action): void {
+    if (!this.enabled) return;
+    this.buffer[action] = INPUT_BUFFER;
   }
 
   /** Consumes the action if it was pressed within the buffer window. */
@@ -86,6 +99,9 @@ export class InputManager implements ActionSource {
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
+    if (KEY_MAP[event.code] !== undefined || this.commands.has(event.code)) {
+      this.onKeyboardUse?.();
+    }
     const command = this.commands.get(event.code);
     if (command) {
       event.preventDefault();

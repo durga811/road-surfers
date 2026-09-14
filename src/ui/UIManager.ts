@@ -15,7 +15,10 @@ export interface UICallbacks {
   onMenu: () => void;
   onToggleSound: (muted: boolean) => void;
   onPause: () => void;
+  onScheme: (scheme: ControlScheme) => void;
 }
+
+export type ControlScheme = 'swipe' | 'buttons';
 
 /**
  * Thin DOM layer. The HUD is deliberately written to only when a value
@@ -75,6 +78,14 @@ export class UIManager {
     $('btn-retry').addEventListener('click', callbacks.onRetry);
     $('btn-menu').addEventListener('click', callbacks.onMenu);
     $('btn-pause').addEventListener('click', callbacks.onPause);
+
+    for (const option of Array.from(document.querySelectorAll<HTMLElement>('.scheme__opt'))) {
+      option.addEventListener('click', () => {
+        const scheme = option.dataset.scheme as ControlScheme;
+        this.setScheme(scheme);
+        callbacks.onScheme(scheme);
+      });
+    }
     this.soundBtn.addEventListener('click', () => {
       const muted = !this.soundBtn.classList.contains('is-muted');
       this.setMuted(muted);
@@ -103,6 +114,25 @@ export class UIManager {
   /** Shows the on-screen pause control only while a run is live. */
   setRunning(running: boolean): void {
     this.topbar.classList.toggle('is-running', running);
+    // The thumb pad appears with the run and leaves with it, so menus
+    // are never cluttered by controls that do nothing.
+    document.body.classList.toggle('is-playing', running);
+  }
+
+  /** Swaps control hints and the on-screen pad for touch devices. */
+  setTouchMode(enabled: boolean): void {
+    document.body.classList.toggle('is-touch', enabled);
+  }
+
+  setScheme(scheme: ControlScheme): void {
+    document.body.classList.toggle('scheme-buttons', scheme === 'buttons');
+    for (const option of Array.from(document.querySelectorAll<HTMLElement>('.scheme__opt'))) {
+      option.classList.toggle('is-active', option.dataset.scheme === scheme);
+    }
+  }
+
+  setPortrait(portrait: boolean): void {
+    document.body.classList.toggle('is-portrait', portrait);
   }
 
   // ── HUD ────────────────────────────────────────────────────────────
