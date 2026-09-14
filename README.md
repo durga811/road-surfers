@@ -63,8 +63,14 @@ The runner is a skinned low-poly robot re-skinned into the same palette (pale
 shell, dark joints, cyan-lit visor). Its `Running`, `Jump` and `Death` clips are
 cross-faded with an `AnimationMixer`, the run cycle's time scale follows speed,
 and the slide — which the model has no clip for — is layered on procedurally by
-folding the spine bones after the mixer runs. A procedural primitive rig remains
-as a fallback if the model cannot be fetched.
+folding the spine bones after the mixer runs. The fold is applied as
+*base + offset*, never additively: two of the three spine bones have no
+animation tracks at all, so anything accumulated on them would never be reset.
+A procedural primitive rig remains as a fallback if the model cannot be fetched.
+
+The runner stands 1.13 m (`PLAYER_SCALE = 0.7`); the collider and the heights of
+overhead and low hazards all derive from the same constants, so what you see is
+always what collides.
 
 Everything is flat-shaded low-poly against a deep indigo void, lit by a single
 shadow-casting key, a cool rim and a sky bounce, with a restrained half-

@@ -3,6 +3,7 @@ import { Geo } from '../render/Geometries';
 import { Mat } from '../render/Materials';
 import { Palette } from '../render/Palette';
 import { clamp, damp, lerp } from '../core/MathUtils';
+import { PLAYER_SCALE } from '../core/Config';
 import { RunnerRig, contactShadowTexture } from './RunnerRig';
 
 /**
@@ -46,6 +47,8 @@ export class PlayerModel implements RunnerRig {
 
   constructor() {
     this.facing.rotation.y = Math.PI;
+    // Authored at 1.62 m; PLAYER_SCALE brings it to the collider height.
+    this.facing.scale.setScalar(PLAYER_SCALE);
     this.root.add(this.facing);
     this.facing.add(this.body);
     this.body.add(this.hips);

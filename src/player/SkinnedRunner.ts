@@ -34,6 +34,14 @@ export class SkinnedRunner implements RunnerRig {
 
   private readonly hips: THREE.Object3D | null;
   private readonly spine: THREE.Object3D[];
+  /**
+   * Each spine bone's rotation.x as the mixer (or the rest pose) left
+   * it, before the slide fold is applied. Only `Neck` has animation
+   * tracks in this model; `Abdomen` and `Torso` are never touched by any
+   * clip, so an additive tweak on them would accumulate forever. The
+   * fold is therefore always applied as base + offset, never as +=.
+   */
+  private readonly spineBase: number[];
   private readonly hipsRestY: number;
 
   private readonly contactShadow: THREE.Mesh;
@@ -101,6 +109,7 @@ export class SkinnedRunner implements RunnerRig {
     this.spine = ['Abdomen', 'Torso', 'Neck']
       .map((n) => scene.getObjectByName(n))
       .filter((b): b is THREE.Object3D => !!b);
+    this.spineBase = this.spine.map((b) => b.rotation.x);
     this.hipsRestY = this.hips?.position.y ?? 0;
 
     // ── Animation ───────────────────────────────────────────────────
@@ -144,7 +153,7 @@ export class SkinnedRunner implements RunnerRig {
           color: Palette.cyan, transparent: true, opacity: 0.32 - i * 0.08, depthWrite: false, toneMapped: false,
         }),
       );
-      t.position.set((i - 1) * 0.28, 0.9 + (i === 1 ? 0.25 : 0), 0.55);
+      t.position.set((i - 1) * 0.22, PLAYER_STAND_HEIGHT * (i === 1 ? 0.7 : 0.55), 0.45);
       this.trail.push(t);
       this.body.add(t);
     }
@@ -179,16 +188,20 @@ export class SkinnedRunner implements RunnerRig {
       this.wasAirborne = inAir;
     }
 
+    // Hand the bones back to the mixer exactly as it last left them, so
+    // whatever it writes (or doesn't) this frame is a clean base.
+    for (let i = 0; i < this.spine.length; i++) this.spine[i].rotation.x = this.spineBase[i];
+
     this.mixer.update(dt);
 
     // ── Procedural posture on top of the clip ───────────────────────
     this.crouch = damp(this.crouch, sliding, 22, dt);
-    if (!this.stunned && this.crouch > 0.005) {
-      // Slide: fold the spine forward and drop the hips. Applied after
-      // the mixer so it stacks on the run cycle instead of replacing it.
-      for (const bone of this.spine) bone.rotation.x += this.crouch * 0.42;
-      if (this.hips) this.hips.position.y = this.hipsRestY * (1 - this.crouch * 0.55);
+    const fold = this.stunned ? 0 : this.crouch;
+    for (let i = 0; i < this.spine.length; i++) {
+      this.spineBase[i] = this.spine[i].rotation.x;
+      this.spine[i].rotation.x = this.spineBase[i] + fold * 0.42;
     }
+    if (this.hips) this.hips.position.y = this.hipsRestY * (1 - fold * 0.55);
 
     const targetLean = 0.06 + Math.min(speed, 30) * 0.006 + this.crouch * 0.55 - airborne * 0.12;
     this.lean = damp(this.lean, targetLean, 14, dt);
@@ -218,7 +231,7 @@ export class SkinnedRunner implements RunnerRig {
       t.scale.z = Math.max(0.001, len);
       t.position.z = 0.45 + len * 0.5;
       t.visible = len > 0.05;
-      t.position.y = (i === 1 ? 1.15 : 0.9) - this.crouch * 0.55;
+      t.position.y = PLAYER_STAND_HEIGHT * (i === 1 ? 0.7 : 0.55) - this.crouch * 0.35;
     }
   }
 
@@ -239,6 +252,7 @@ export class SkinnedRunner implements RunnerRig {
     this.mixer.stopAllAction();
     this.current = 'run';
     this.actions.run.reset().setEffectiveWeight(1).play();
+    for (let i = 0; i < this.spine.length; i++) this.spine[i].rotation.x = this.spineBase[i];
     if (this.hips) this.hips.position.y = this.hipsRestY;
   }
 }

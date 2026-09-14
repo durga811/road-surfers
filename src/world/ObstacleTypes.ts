@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Mat } from '../render/Materials';
 import { PartBuilder } from '../render/PartBuilder';
-import { LANE_COUNT, LANE_WIDTH, LANE_X } from '../core/Config';
+import { LANE_COUNT, LANE_WIDTH, LANE_X, LOW_HAZARD_HEIGHT, OVERHEAD_CLEARANCE } from '../core/Config';
 
 /**
  * How an obstacle blocks a lane. This is the single vocabulary shared
@@ -75,29 +75,32 @@ function chevron(
 }
 function buildHurdle(width: number): THREE.Object3D {
   const b = new PartBuilder();
-  b.box(Mat.hazardBody, width, 0.16, 0.42, 0, 0.82);
-  b.box(Mat.hazardStripe, width - 0.06, 0.06, 0.46, 0, 0.82);
+  const top = LOW_HAZARD_HEIGHT;
+  b.box(Mat.hazardBody, width, 0.14, 0.42, 0, top - 0.07);
+  b.box(Mat.hazardStripe, width - 0.06, 0.06, 0.46, 0, top - 0.07);
   for (const s of [-1, 1]) {
-    b.box(Mat.hazardBody, 0.12, 0.86, 0.12, s * (width / 2 - 0.12), 0.43);
+    b.box(Mat.hazardBody, 0.12, top - 0.04, 0.12, s * (width / 2 - 0.12), (top - 0.04) / 2);
   }
   b.box(Mat.hazardBody, width, 0.07, 0.5, 0, 0.035);
   // Lit stripe on the top edge + an up-chevron: go over.
   const arrows = width > 3 ? [-1.1, 1.1] : [0];
-  for (const x of arrows) chevron(b, 'up', 0.44, x, 0.86, 0.25);
+  for (const x of arrows) chevron(b, 'up', 0.4, x, top - 0.03, 0.25);
   return b.build(`hurdle:${width}`);
 }
 
 function buildBeam(width: number): THREE.Object3D {
   const b = new PartBuilder();
   // Overhead mass on a gantry — the lit underside reads as "duck".
-  b.box(Mat.hazardBody, width, 1.5, 0.4, 0, 2.0);
-  b.box(Mat.hazardStripe, width - 0.04, 0.08, 0.44, 0, 1.32);
-  b.box(Mat.hazardWarn, width - 0.3, 0.04, 0.36, 0, 1.26);
+  const under = OVERHEAD_CLEARANCE;
+  const mass = 1.3;
+  b.box(Mat.hazardBody, width, mass, 0.4, 0, under + mass / 2);
+  b.box(Mat.hazardStripe, width - 0.04, 0.08, 0.44, 0, under + 0.06);
+  b.box(Mat.hazardWarn, width - 0.3, 0.04, 0.36, 0, under + 0.01);
   for (const s of [-1, 1]) {
-    b.box(Mat.archFrame, 0.1, 2.9, 0.1, s * (width / 2 + 0.12), 1.45);
+    b.box(Mat.archFrame, 0.1, under + mass + 0.2, 0.1, s * (width / 2 + 0.12), (under + mass + 0.2) / 2);
   }
   const arrows = width > 3 ? [-1.1, 1.1] : [0];
-  for (const x of arrows) chevron(b, 'down', 0.46, x, 1.72, 0.23);
+  for (const x of arrows) chevron(b, 'down', 0.44, x, under + 0.5, 0.23);
   return b.build(`beam:${width}`);
 }
 
@@ -178,10 +181,11 @@ function buildSweeper(): THREE.Object3D {
   group.add(rail.build('sweeper.rail'));
 
   const arm = new PartBuilder();
-  arm.box(Mat.hazardBody, 2.4, 0.42, 0.44, 0, 1.85);
-  arm.box(Mat.hazardStripe, 2.44, 0.1, 0.48, 0, 1.63);
-  arm.box(Mat.hazardBody, 0.5, 1.1, 0.5, 0, 2.4);
-  chevron(arm, 'down', 0.5, 0, 1.9, 0.24);
+  const under = OVERHEAD_CLEARANCE;
+  arm.box(Mat.hazardBody, 2.4, 0.42, 0.44, 0, under + 0.29);
+  arm.box(Mat.hazardStripe, 2.44, 0.1, 0.48, 0, under + 0.05);
+  arm.box(Mat.hazardBody, 0.5, 3.0 - (under + 0.5), 0.5, 0, (3.0 + under + 0.5) / 2);
+  chevron(arm, 'down', 0.46, 0, under + 0.34, 0.24);
   const armGroup = arm.build('sweeper.arm');
   armGroup.name = 'arm';
   group.add(armGroup);
@@ -210,22 +214,22 @@ export function obstacleCentreX(def: ObstacleDef, anchor: number): number {
 export const OBSTACLES: Record<ObstacleType, ObstacleDef> = {
   hurdle: {
     type: 'hurdle', block: Block.Low, lanes: [0],
-    width: 1.7, depth: 0.5, minY: 0, maxY: 0.9,
+    width: 1.7, depth: 0.5, minY: 0, maxY: LOW_HAZARD_HEIGHT,
     build: () => buildHurdle(1.7),
   },
   hurdleWide: {
     type: 'hurdleWide', block: Block.Low, lanes: [0, 1],
-    width: LANE_WIDTH + 1.7, depth: 0.5, minY: 0, maxY: 0.9,
+    width: LANE_WIDTH + 1.7, depth: 0.5, minY: 0, maxY: LOW_HAZARD_HEIGHT,
     build: () => buildHurdle(LANE_WIDTH + 1.7),
   },
   beam: {
     type: 'beam', block: Block.High, lanes: [0],
-    width: 1.9, depth: 0.44, minY: 1.24, maxY: 2.75,
+    width: 1.9, depth: 0.44, minY: OVERHEAD_CLEARANCE, maxY: 2.6,
     build: () => buildBeam(1.9),
   },
   beamWide: {
     type: 'beamWide', block: Block.High, lanes: [0, 1],
-    width: LANE_WIDTH + 1.9, depth: 0.44, minY: 1.24, maxY: 2.75,
+    width: LANE_WIDTH + 1.9, depth: 0.44, minY: OVERHEAD_CLEARANCE, maxY: 2.6,
     build: () => buildBeam(LANE_WIDTH + 1.9),
   },
   pylon: {
@@ -255,7 +259,7 @@ export const OBSTACLES: Record<ObstacleType, ObstacleDef> = {
   },
   sweeper: {
     type: 'sweeper', block: Block.High, lanes: [-1, 0, 1], motion: 'sweep',
-    width: 2.4, depth: 0.5, minY: 1.24, maxY: 3.2,
+    width: 2.4, depth: 0.5, minY: OVERHEAD_CLEARANCE, maxY: 3.2,
     build: buildSweeper,
   },
 };

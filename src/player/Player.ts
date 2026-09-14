@@ -35,9 +35,9 @@ export class Player {
     this.object.add(this.model.root);
 
     this.shieldBubble = new THREE.Group();
-    this.shieldBubble.add(new THREE.Mesh(Geo.icosahedron(1.12, 1), Mat.shieldBubble));
-    this.shieldBubble.add(new THREE.Mesh(Geo.icosahedron(1.14, 1), Mat.shieldWire));
-    this.shieldBubble.position.y = 0.9;
+    this.shieldBubble.add(new THREE.Mesh(Geo.icosahedron(0.82, 1), Mat.shieldBubble));
+    this.shieldBubble.add(new THREE.Mesh(Geo.icosahedron(0.84, 1), Mat.shieldWire));
+    this.shieldBubble.position.y = PLAYER_STAND_HEIGHT * 0.55;
     this.shieldBubble.visible = false;
     this.object.add(this.shieldBubble);
   }
@@ -84,7 +84,7 @@ export class Player {
       const pulse = 1 + Math.sin(performance.now() * 0.004) * 0.035;
       this.shieldBubble.scale.setScalar(pulse);
       // Follow the runner into a slide so the shell never clips the deck.
-      this.shieldBubble.position.y = 0.9 - this.movement.slideBlend * 0.32;
+      this.shieldBubble.position.y = PLAYER_STAND_HEIGHT * 0.55 - this.movement.slideBlend * 0.22;
     }
 
     if (this.hitFlash > 0) {

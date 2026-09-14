@@ -212,10 +212,10 @@ export class Game {
     this.audio.stopMusic();
     this.ui.flashHit('hit');
 
-    this.particles.burst(this.player.x, 1.0, 0, 26, Palette.hazardGlow, {
+    this.particles.burst(this.player.x, 0.7, 0, 26, Palette.hazardGlow, {
       speed: 8, life: 0.9, gravity: 20, scale: 1.1, up: 0.6, spread: 1.3, worldLocked: false,
     });
-    this.particles.burst(this.player.x, 1.0, 0, 12, Palette.player, {
+    this.particles.burst(this.player.x, 0.7, 0, 12, Palette.player, {
       speed: 5, life: 0.7, gravity: 18, scale: 0.8, up: 0.8, spread: 1, worldLocked: false,
     });
   }
@@ -408,7 +408,7 @@ export class Game {
       this.particles.burst(hit.x, 1.0, hit.z, 18, Palette.hazardGlow, {
         speed: 7, life: 0.6, gravity: 12, scale: 0.8, up: 0.5, spread: 1.3,
       });
-      this.particles.burst(this.player.x, 1.0, 0, 14, Palette.cyan, {
+      this.particles.burst(this.player.x, 0.7, 0, 14, Palette.cyan, {
         speed: 6, life: 0.55, gravity: 10, scale: 0.7, up: 0.5, spread: 1.2,
       });
       this.track.obstacles.destroy(hit);

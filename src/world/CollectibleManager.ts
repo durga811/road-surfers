@@ -4,6 +4,7 @@ import { Mat } from '../render/Materials';
 import { Palette } from '../render/Palette';
 import { ObjectPool } from '../core/ObjectPool';
 import {
+  COIN_PICKUP_CENTRE,
   COIN_PICKUP_X,
   COIN_PICKUP_Y,
   COIN_PICKUP_Z,
@@ -92,7 +93,7 @@ export class CollectibleManager {
     record.x = (lane - 1) * LANE_WIDTH;
     record.z = z;
     record.prevZ = z;
-    object.position.set(record.x, 1.25, z);
+    object.position.set(record.x, 1.0, z);
     this.powerUps.push(record);
   }
 
@@ -105,7 +106,7 @@ export class CollectibleManager {
 
       if (magnet) {
         const dx = playerX - coin.x;
-        const dy = playerY + 0.9 - coin.y;
+        const dy = playerY + COIN_PICKUP_CENTRE - coin.y;
         const dz = -coin.z;
         const distSq = dx * dx + dy * dy + dz * dz;
         if (distSq < MAGNET_RADIUS * MAGNET_RADIUS) {
@@ -145,7 +146,7 @@ export class CollectibleManager {
       p.prevZ = p.z;
       p.z += deltaZ;
       p.object.position.z = p.z;
-      p.object.position.y = 1.25 + Math.sin(time * 2 + p.x) * 0.12;
+      p.object.position.y = 1.0 + Math.sin(time * 2 + p.x) * 0.12;
       p.object.rotation.y = time * 1.3;
       const fade = p.z > 1.2 ? Math.max(0, 1 - (p.z - 1.2) / 2.4) : 1;
       p.object.scale.setScalar(fade);
@@ -163,7 +164,7 @@ export class CollectibleManager {
       const crossed = coin.prevZ <= COIN_PICKUP_Z && coin.z >= -COIN_PICKUP_Z;
       if (!crossed) continue;
       if (Math.abs(coin.x - playerX) > COIN_PICKUP_X) continue;
-      if (Math.abs(coin.y - (playerY + 0.85)) > COIN_PICKUP_Y) continue;
+      if (Math.abs(coin.y - (playerY + COIN_PICKUP_CENTRE)) > COIN_PICKUP_Y) continue;
       onCollect(coin.x, coin.y, coin.z);
       this.recycleCoin(i);
       collected++;
@@ -178,7 +179,7 @@ export class CollectibleManager {
       if (!crossed) continue;
       if (Math.abs(p.x - playerX) > 1.0) continue;
       if (playerY > 1.6) continue;
-      onCollect(p.kind, p.x, 1.25);
+      onCollect(p.kind, p.x, 1.0);
       this.recyclePowerUp(i);
     }
   }

@@ -41,14 +41,14 @@ export class CameraController {
 
   /** Menu framing: a slow orbit that shows off the runner and the city. */
   updateMenu(dt: number, time: number): void {
-    const radius = 5.6;
+    const radius = 4.6;
     const angle = time * 0.16;
     this.camera.position.set(
       Math.sin(angle) * radius,
       2.5 + Math.sin(time * 0.4) * 0.28,
       Math.cos(angle) * radius + 1.2,
     );
-    this.lookTarget.set(0, 1.05, 0);
+    this.lookTarget.set(0, 0.75, 0);
     this.camera.lookAt(this.lookTarget);
     this.camera.fov = damp(this.camera.fov, 52, 3, dt);
     this.camera.updateProjectionMatrix();
@@ -93,7 +93,7 @@ export class CameraController {
 
     this.lookTarget.set(
       lerp(this.currentX, playerX, 0.55) * 0.8,
-      1.28 + playerY * 0.5,
+      1.05 + playerY * 0.5,
       -CAMERA_LOOK_AHEAD - intensity * 2.4,
     );
     this.camera.lookAt(this.lookTarget);

@@ -28,10 +28,21 @@ export const FAST_FALL_GRAVITY = 62;
 export const LANE_CHANGE_TIME = 0.15;   // seconds, lane→lane
 export const SLIDE_TIME = 0.58;
 
+/**
+ * The runner is drawn at 70% of the height the track was first tuned
+ * for. The collider and every height-sensitive hazard derive from this
+ * so what you see is always what collides.
+ */
+export const PLAYER_SCALE = 0.7;
 export const PLAYER_HALF_WIDTH = 0.32;
 export const PLAYER_HALF_DEPTH = 0.3;
-export const PLAYER_STAND_HEIGHT = 1.62;
-export const PLAYER_SLIDE_HEIGHT = 0.78;
+export const PLAYER_STAND_HEIGHT = 1.62 * PLAYER_SCALE; // 1.13
+export const PLAYER_SLIDE_HEIGHT = 0.78 * PLAYER_SCALE; // 0.55
+
+/** Underside of overhead hazards: clear of a slide, in the way of a run. */
+export const OVERHEAD_CLEARANCE = 0.88;
+/** Top of low hazards: must be jumped. */
+export const LOW_HAZARD_HEIGHT = 0.72;
 
 /** Forgiveness windows that make controls feel responsive. */
 export const INPUT_BUFFER = 0.14;
@@ -60,14 +71,16 @@ export const SURGE_SPEED_BONUS = 5.5;
 export const SURGE_MULTIPLIER = 2;
 
 // ── Collectibles ────────────────────────────────────────────────────
-export const COIN_Y = 1.05;
+export const COIN_Y = 0.9;
+/** Vertical centre of the pickup volume, relative to the player's feet. */
+export const COIN_PICKUP_CENTRE = 0.6;
 export const COIN_PICKUP_X = 0.78;
 export const COIN_PICKUP_Y = 0.95;
 export const COIN_PICKUP_Z = 0.7;
 
 // ── Camera ──────────────────────────────────────────────────────────
-export const CAMERA_OFFSET = { x: 0, y: 2.85, z: 5.95 };
-export const CAMERA_LOOK_AHEAD = 7.5;
+export const CAMERA_OFFSET = { x: 0, y: 2.55, z: 5.4 };
+export const CAMERA_LOOK_AHEAD = 7.0;
 export const CAMERA_FOV_BASE = 62;
 export const CAMERA_FOV_MAX = 74;
 
