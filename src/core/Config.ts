@@ -106,3 +106,4 @@ export const CAMERA_FOV_CEILING = 90;
 export const STORAGE_KEY = 'road-surfers.best.v1';
 export const STORAGE_MUTE = 'road-surfers.mute.v1';
 export const STORAGE_SCHEME = 'road-surfers.scheme.v1';
+export const STORAGE_FULLSCREEN = 'road-surfers.fullscreen.v1';

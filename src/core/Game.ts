@@ -14,6 +14,7 @@ import { PowerUpSystem } from '../systems/PowerUpSystem';
 import { ParticleSystem } from '../systems/ParticleSystem';
 import { AudioManager } from '../audio/AudioManager';
 import { ControlScheme, UIManager } from '../ui/UIManager';
+import * as Fullscreen from '../ui/Fullscreen';
 import { GameLoop } from './GameLoop';
 import { GameState, Phase } from './GameState';
 import { Random } from './Random';
@@ -21,7 +22,7 @@ import { Palette } from '../render/Palette';
 import { PowerUpKind } from '../world/ProceduralGenerator';
 import { POWER_CSS, POWER_LABEL } from '../systems/PowerUpSystem';
 import { clamp, damp } from './MathUtils';
-import { SPEED_START, STORAGE_SCHEME } from './Config';
+import { SPEED_START, STORAGE_FULLSCREEN, STORAGE_SCHEME } from './Config';
 
 const MENU_SPEED = 8.5;
 const DEATH_DURATION = 1.35;
@@ -53,6 +54,7 @@ export class Game {
   private readonly touchInput: TouchInput | null;
   private touchUI = prefersTouchUI();
   private scheme: ControlScheme = 'swipe';
+  private wantsFullscreen = false;
 
   private enclosure = 0;
   private lastTier = 0;
@@ -106,6 +108,7 @@ export class Game {
       onMenu: () => this.toMenu(),
       onPause: () => this.togglePause(),
       onScheme: (scheme) => this.setScheme(scheme),
+      onFullscreen: () => void this.toggleFullscreen(),
       onToggleSound: (muted) => {
         this.audio.unlock();
         this.audio.setMuted(muted);
@@ -139,7 +142,9 @@ export class Game {
       if (this.state.current === Phase.Running) this.togglePause();
     };
 
+    this.wantsFullscreen = loadFullscreenPreference();
     this.watchOrientation();
+    this.watchFullscreen();
     this.bindCommands();
     this.loop = new GameLoop(this.update);
   }
@@ -167,6 +172,16 @@ export class Game {
   private startRun(): void {
     this.audio.unlock();
     this.audio.uiClick();
+
+    // Touch devices go fullscreen for the run by default — browser chrome
+    // eats roughly a third of a phone's landscape viewport. On desktop it
+    // is opt-in, and only restored if the player asked for it before.
+    if ((this.touchUI || this.wantsFullscreen) && !Fullscreen.isActive()) {
+      void Fullscreen.enter().then((active) => {
+        if (!active) this.ui.setFullscreenAvailable(false);
+        else if (this.touchUI) void Fullscreen.lockLandscape();
+      });
+    }
 
     this.score.reset();
     this.difficulty.reset();
@@ -465,6 +480,8 @@ export class Game {
       }
     });
 
+    this.input.bindCommand('KeyF', () => void this.toggleFullscreen());
+
     this.input.bindCommand('KeyM', () => {
       this.audio.unlock();
       const muted = this.audio.toggleMute();
@@ -509,6 +526,45 @@ export class Game {
     if (touch) this.touchInput?.setEnabled(this.scheme === 'swipe');
   }
 
+  /**
+   * Fullscreen has to survive the browser changing it behind our back:
+   * Escape, the system back gesture and tab switches all exit without
+   * telling us. Everything reads from `fullscreenchange`, so the button
+   * state can never drift out of sync with reality.
+   */
+  private watchFullscreen(): void {
+    this.ui.setFullscreenAvailable(Fullscreen.isSupported());
+    Fullscreen.onChange(() => {
+      const active = Fullscreen.isActive();
+      this.ui.setFullscreen(active);
+      this.wantsFullscreen = active;
+    });
+  }
+
+  private async toggleFullscreen(): Promise<void> {
+    this.audio.unlock();
+    this.audio.uiClick();
+
+    const wasActive = Fullscreen.isActive();
+    const active = await Fullscreen.toggle();
+
+    // Asked to enter and did not: this environment refuses fullscreen
+    // whatever it advertises. Retire the control rather than leave a
+    // button that does nothing every time it is pressed.
+    if (!wasActive && !active) {
+      this.ui.setFullscreenAvailable(false);
+      return;
+    }
+
+    // Remembered so the next run restores it: entering needs a user
+    // gesture, and Start Run is one.
+    this.wantsFullscreen = active;
+    try {
+      localStorage.setItem(STORAGE_FULLSCREEN, active ? '1' : '0');
+    } catch { /* storage unavailable */ }
+    if (active && this.touchUI) void Fullscreen.lockLandscape();
+  }
+
   private watchOrientation(): void {
     // Measure the viewport directly and listen on resize as well as the
     // media query: `orientationchange` is unreliable across browsers and
@@ -528,6 +584,14 @@ export class Game {
     this.touchInput?.dispose();
     this.input.dispose();
     this.stage.dispose();
+  }
+}
+
+function loadFullscreenPreference(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_FULLSCREEN) === '1';
+  } catch {
+    return false;
   }
 }
 

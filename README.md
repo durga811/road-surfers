@@ -38,6 +38,14 @@ changes. A thumb-button pad is available instead via the toggle on the start
 screen. Landscape only: portrait leaves the three lanes too narrow to read, so
 the game asks you to rotate.
 
+**Fullscreen** is a button in the top-right and the `F` key. Touch devices enter
+it automatically when a run starts — browser chrome eats roughly a third of a
+phone's landscape viewport — and the game tries to lock the orientation to
+landscape while it is there. It is opt-in on desktop and the choice is
+remembered. Where fullscreen is unavailable (iPhone Safari has no element
+fullscreen) or refused by the embedder, the control hides itself rather than
+sitting there doing nothing.
+
 | Action | Keys |
 | --- | --- |
 | Move left | `A` · `←` |
@@ -45,6 +53,7 @@ the game asks you to rotate.
 | Jump | `W` · `↑` · `Space` |
 | Slide | `S` · `↓` |
 | Pause | `Esc` · `P` · on-screen button |
+| Fullscreen | `F` · on-screen button |
 | Restart | `R` |
 | Mute | `M` |
 
@@ -285,6 +294,11 @@ Decisions behind that:
 - **WebGL context loss is handled.** Losing the context is routine on mobile;
   unhandled it is a permanently frozen black canvas. The game pauses on loss and
   resumes when the browser hands the context back.
+- **Sizing listens to both a ResizeObserver and the window events.** The
+  observer reports the container's box after layout, which is what is actually
+  drawn into; the window events keep working when rendering is suspended and
+  observer callbacks are not delivered. Both funnel into one handler that no-ops
+  when nothing changed.
 - **Vertical FOV widens on narrow viewports** to hold the horizontal view
   constant, so the outer lanes never fall off the sides of a short window.
 

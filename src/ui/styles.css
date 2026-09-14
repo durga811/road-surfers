@@ -375,6 +375,13 @@ kbd { margin-right: 5px; }
 .iconbtn svg { width: 17px; height: 17px; fill: none; stroke: var(--ink); stroke-width: 1.7; stroke-linejoin: round; stroke-linecap: round; }
 
 .iconbtn--pause svg rect { fill: var(--ink); stroke: none; }
+
+/* One button, two glyphs: whichever state you are *not* in is hidden. */
+.iconbtn--fs .fs-exit { display: none; }
+body.is-fullscreen .iconbtn--fs .fs-enter { display: none; }
+body.is-fullscreen .iconbtn--fs .fs-exit { display: block; }
+/* iPhone Safari has no element fullscreen; do not offer a dead control. */
+body.no-fullscreen .iconbtn--fs { display: none; }
 /* Pause only means something mid-run. */
 .iconbtn--pause { display: none; }
 .topbar.is-running .iconbtn--pause { display: grid; }

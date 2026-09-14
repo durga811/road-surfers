@@ -16,6 +16,7 @@ export interface UICallbacks {
   onToggleSound: (muted: boolean) => void;
   onPause: () => void;
   onScheme: (scheme: ControlScheme) => void;
+  onFullscreen: () => void;
 }
 
 export type ControlScheme = 'swipe' | 'buttons';
@@ -78,6 +79,7 @@ export class UIManager {
     $('btn-retry').addEventListener('click', callbacks.onRetry);
     $('btn-menu').addEventListener('click', callbacks.onMenu);
     $('btn-pause').addEventListener('click', callbacks.onPause);
+    $('btn-fullscreen').addEventListener('click', callbacks.onFullscreen);
 
     for (const option of Array.from(document.querySelectorAll<HTMLElement>('.scheme__opt'))) {
       option.addEventListener('click', () => {
@@ -133,6 +135,14 @@ export class UIManager {
 
   setPortrait(portrait: boolean): void {
     document.body.classList.toggle('is-portrait', portrait);
+  }
+
+  setFullscreen(active: boolean): void {
+    document.body.classList.toggle('is-fullscreen', active);
+  }
+
+  setFullscreenAvailable(available: boolean): void {
+    document.body.classList.toggle('no-fullscreen', !available);
   }
 
   // ── HUD ────────────────────────────────────────────────────────────

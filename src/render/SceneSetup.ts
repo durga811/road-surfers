@@ -30,6 +30,8 @@ export class Stage {
   readonly keyLight: THREE.DirectionalLight;
   private readonly bloom: UnrealBloomPass;
   private readonly hemi: THREE.HemisphereLight;
+  private readonly canvas: HTMLCanvasElement;
+  private observer: ResizeObserver | null = null;
   private readonly fogOpen = new THREE.Color(Palette.fog);
   private readonly fogTunnel = new THREE.Color(0x0a0d1c);
   private readonly sky: THREE.Object3D;
@@ -43,8 +45,11 @@ export class Stage {
   private usePost = true;
   private degradeTimer = 0;
   private locked = false;
+  private lastWidth = 0;
+  private lastHeight = 0;
 
   constructor(canvas: HTMLCanvasElement, touch = false) {
+    this.canvas = canvas;
     this.touch = touch;
     this.renderer = new THREE.WebGLRenderer({
       canvas,
@@ -119,8 +124,28 @@ export class Stage {
     canvas.addEventListener('webglcontextlost', this.onContextLostEvent, false);
     canvas.addEventListener('webglcontextrestored', this.onContextRestoredEvent, false);
 
+    // Both signals, deliberately.
+    //
+    // A ResizeObserver reports the container's box *after* layout, which
+    // is what we actually draw into — `resize` can fire before the new
+    // dimensions are readable, and fullscreen transitions and mobile
+    // toolbar collapses may not fire it at a useful moment at all.
+    //
+    // But ResizeObserver callbacks are delivered as part of the
+    // rendering steps, so they are suspended while the document is
+    // hidden or rendering is throttled. The window events are not, and
+    // keep working in those cases.
+    //
+    // Both funnel into the same handler, which no-ops when nothing has
+    // actually changed, so the overlap is free.
+    const container = canvas.parentElement;
+    if (container && typeof ResizeObserver !== 'undefined') {
+      this.observer = new ResizeObserver(this.onResize);
+      this.observer.observe(container);
+    }
     window.addEventListener('resize', this.onResize);
     window.addEventListener('orientationchange', this.onResize);
+    document.addEventListener('fullscreenchange', this.onResize);
   }
 
   private targetPixelRatio(): number {
@@ -212,6 +237,7 @@ export class Stage {
         this.renderer.setPixelRatio(1);
         break;
     }
+    this.lastWidth = 0; // force the next resize through
     this.onResize();
   }
 
@@ -223,8 +249,12 @@ export class Stage {
   private readonly onResize = (): void => {
     // A hidden or collapsed container reports zero, which produces an
     // incomplete framebuffer and a flood of GL warnings.
-    const w = Math.max(1, window.innerWidth);
-    const h = Math.max(1, window.innerHeight);
+    const box = this.canvas.parentElement?.getBoundingClientRect();
+    const w = Math.max(1, Math.round(box?.width || window.innerWidth));
+    const h = Math.max(1, Math.round(box?.height || window.innerHeight));
+    if (w === this.lastWidth && h === this.lastHeight) return;
+    this.lastWidth = w;
+    this.lastHeight = h;
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(w, h);
@@ -233,8 +263,10 @@ export class Stage {
   };
 
   dispose(): void {
+    this.observer?.disconnect();
     window.removeEventListener('resize', this.onResize);
     window.removeEventListener('orientationchange', this.onResize);
+    document.removeEventListener('fullscreenchange', this.onResize);
     this.composer.dispose();
     this.renderer.dispose();
   }
